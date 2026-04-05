@@ -52,6 +52,14 @@ def _convert_global_map(grid: Any) -> Any:
     return grid.to_rerun(voxel_size=0.1, mode="boxes")
 
 
+def _convert_depth_image(img: Any) -> Any:
+    import numpy as np
+    import rerun as rr
+
+    depth = np.clip(img.data, 0.1, 6.0)
+    return rr.DepthImage(depth, meter=1.0)
+
+
 def _convert_navigation_costmap(grid: Any) -> Any:
     return grid.to_rerun(
         colormap="Accent",
@@ -66,19 +74,22 @@ def _static_base_link(rr: Any) -> list[Any]:
         rr.Boxes3D(
             half_sizes=[0.35, 0.155, 0.2],
             colors=[(0, 255, 127)],
-            fill_mode="wireframe",
+            fill_mode="majorwireframe",
         ),
         rr.Transform3D(parent_frame="tf#/base_link"),
     ]
 
 
 def _go2_rerun_blueprint() -> Any:
-    """Split layout: camera feed + 3D world view side by side."""
+    """Split layout: camera + depth on left, 3D world view on right."""
     import rerun.blueprint as rrb
 
     return rrb.Blueprint(
         rrb.Horizontal(
-            rrb.Spatial2DView(origin="world/color_image", name="Camera"),
+            rrb.Vertical(
+                rrb.Spatial2DView(origin="world/color_image", name="Camera"),
+                rrb.Spatial2DView(origin="world/depth_image", name="Depth"),
+            ),
             rrb.Spatial3DView(origin="world", name="3D"),
             column_shares=[1, 2],
         ),
@@ -97,6 +108,7 @@ rerun_config = {
     # This is unsustainable once we move to multi robot etc
     "visual_override": {
         "world/camera_info": _convert_camera_info,
+        "world/depth_image": _convert_depth_image,
         "world/global_map": _convert_global_map,
         "world/navigation_costmap": _convert_navigation_costmap,
     },

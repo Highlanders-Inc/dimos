@@ -267,6 +267,16 @@ class MujocoConnection:
 
         return None
 
+    def get_depth_frame(self) -> Image | None:
+        if self.shm_data is None:
+            return None
+
+        depth_array, seq = self.shm_data.read_depth()
+        if seq > 0 and depth_array is not None:
+            return Image.from_numpy(depth_array, format=ImageFormat.DEPTH, frame_id="camera_optical")
+
+        return None
+
     def get_lidar_message(self) -> PointCloud2 | None:
         if self.shm_data is None:
             return None
@@ -314,6 +324,10 @@ class MujocoConnection:
             return Disposable(dispose)
 
         return Observable(on_subscribe)
+
+    @functools.cache
+    def depth_stream(self) -> Observable[Image]:
+        return self._create_stream(self.get_depth_frame, LIDAR_FPS, "Depth")
 
     @functools.cache
     def lidar_stream(self) -> Observable[PointCloud2]:

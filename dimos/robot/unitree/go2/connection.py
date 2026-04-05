@@ -176,6 +176,7 @@ class GO2Connection(Module, spec.Camera, spec.Pointcloud):
     odom: Out[PoseStamped]
     lidar: Out[PointCloud2]
     color_image: Out[Image]
+    depth_image: Out[Image]
     camera_info: Out[CameraInfo]
 
     connection: Go2ConnectionProtocol
@@ -235,6 +236,8 @@ class GO2Connection(Module, spec.Camera, spec.Pointcloud):
         self._disposables.add(self.connection.lidar_stream().subscribe(self.lidar.publish))
         self._disposables.add(self.connection.odom_stream().subscribe(self._publish_tf))
         self._disposables.add(self.connection.video_stream().subscribe(onimage))
+        if hasattr(self.connection, "depth_stream"):
+            self._disposables.add(self.connection.depth_stream().subscribe(self.depth_image.publish))
         self._disposables.add(Disposable(self.cmd_vel.subscribe(self.move)))
 
         self._camera_info_thread = Thread(

@@ -392,16 +392,18 @@ class Detection2DBBox(Detection2D):
         )
 
     def to_ros_detection2d(self) -> ROSDetection2D:
+        results = [
+            ObjectHypothesisWithPose(
+                ObjectHypothesis(
+                    class_id=self.name,
+                    score=self.confidence,
+                )
+            )
+        ]
         return ROSDetection2D(
             header=Header(self.ts, "camera_link"),
             bbox=self.to_ros_bbox(),
-            results=[
-                ObjectHypothesisWithPose(
-                    ObjectHypothesis(
-                        class_id=self.class_id,
-                        score=self.confidence,
-                    )
-                )
-            ],
+            results_length=len(results),
+            results=results,
             id=str(self.track_id),
         )

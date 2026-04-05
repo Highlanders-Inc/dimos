@@ -27,3 +27,36 @@ class Detection2DArray(LCMDetection2DArray):  # type: ignore[misc]
     @property
     def ts(self) -> float:
         return to_timestamp(self.header.stamp)
+
+    def to_rerun(self) -> list:  # type: ignore[type-arg]
+        """Return 2D bounding boxes overlaid on the camera image in Rerun."""
+        import rerun as rr
+
+        if not self.detections:
+            return []
+
+        centers = []
+        half_sizes = []
+        labels = []
+        for det in self.detections:
+            cx = det.bbox.center.position.x
+            cy = det.bbox.center.position.y
+            half_sizes.append([det.bbox.size_x / 2, det.bbox.size_y / 2])
+            centers.append([cx, cy])
+            if det.results:
+                h = det.results[0].hypothesis
+                label = f"{h.class_id} {h.score:.0%}"
+            else:
+                label = det.id or ""
+            labels.append(label)
+
+        return [
+            (
+                "world/color_image/detections",
+                rr.Boxes2D(
+                    centers=centers,
+                    half_sizes=half_sizes,
+                    labels=labels,
+                ),
+            )
+        ]

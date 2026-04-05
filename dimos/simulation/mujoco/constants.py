@@ -14,15 +14,18 @@
 
 from pathlib import Path
 
-# Video/Camera constants
+# Video/Camera constants (MuJoCo MJCF fovy = vertical degrees)
+# ZED X (2.2mm lens): H 110° / V 80° / D 120° — match vertical FOV to MJCF head_camera / depth cameras.
 VIDEO_WIDTH = 320
 VIDEO_HEIGHT = 240
-VIDEO_CAMERA_FOV = 45  # MuJoCo default FOV for head_camera (degrees)
-DEPTH_CAMERA_FOV = 160
+VIDEO_CAMERA_FOV = 80
+DEPTH_CAMERA_FOV = 80
 
-# Depth camera range/filtering constants
-MAX_RANGE = 3
-MIN_RANGE = 0.2
+# Depth range (ZED X 2.2mm wide, Stereolabs datasheet): hardware ~0.3–20 m; typical “ideal” use ~0.3–12 m.
+MIN_RANGE = 0.3
+MAX_RANGE = 20.0
+
+# Camera-frame vertical band (m); sim-only clutter filter — not a ZED hardware spec.
 MAX_HEIGHT = 1.2
 
 # Lidar constants

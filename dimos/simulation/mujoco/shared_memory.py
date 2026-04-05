@@ -241,6 +241,15 @@ class ShmWriter:
         cmd_array[3:6] = angular
         self._increment_seq(3)
 
+    def read_depth(self) -> tuple[NDArray[Any] | None, int]:
+        seq = self._get_seq(1)
+        if seq > 0:
+            depth_array: NDArray[Any] = np.ndarray(
+                (VIDEO_HEIGHT, VIDEO_WIDTH), dtype=np.float32, buffer=self.shm.depth_front.buf
+            )
+            return depth_array.copy(), seq
+        return None, 0
+
     def read_lidar(self) -> tuple[PointCloud2 | None, int]:
         seq = self._get_seq(4)
         if seq > 0:

@@ -21,14 +21,14 @@ import numpy as np
 from numpy.typing import NDArray
 import open3d as o3d  # type: ignore[import-untyped]
 
-from dimos.simulation.mujoco.constants import MAX_HEIGHT, MAX_RANGE, MIN_RANGE
+from dimos.simulation.mujoco.constants import DEPTH_CAMERA_FOV, MAX_HEIGHT, MAX_RANGE, MIN_RANGE
 
 
 def depth_image_to_point_cloud(
     depth_image: NDArray[Any],
     camera_pos: NDArray[Any],
     camera_mat: NDArray[Any],
-    fov_degrees: float = 120,
+    fov_degrees: float = DEPTH_CAMERA_FOV,
 ) -> NDArray[Any]:
     """
     Convert a depth image from a camera to a 3D point cloud using perspective projection.
@@ -70,12 +70,12 @@ def depth_image_to_point_cloud(
     camera_points[:, 1] = -camera_points[:, 1]
     camera_points[:, 2] = -camera_points[:, 2]
 
-    # y (index 1) is up here
+    # y (index 1) is up. Depth band matches ZED X; |y| cap is an extra sim heuristic (ground/sky).
+    z_depth = np.abs(camera_points[:, 2])
     valid_mask = (
-        (np.abs(camera_points[:, 0]) <= MAX_RANGE)
-        & (np.abs(camera_points[:, 1]) <= MAX_HEIGHT)
-        & (np.abs(camera_points[:, 2]) >= MIN_RANGE)
-        & (np.abs(camera_points[:, 2]) <= MAX_RANGE)
+        (np.abs(camera_points[:, 1]) <= MAX_HEIGHT)
+        & (z_depth >= MIN_RANGE)
+        & (z_depth <= MAX_RANGE)
     )
     camera_points = camera_points[valid_mask]
 
